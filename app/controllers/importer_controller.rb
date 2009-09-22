@@ -120,7 +120,6 @@ class ImporterController < ApplicationController
       category = IssueCategory.find_by_name(row[attrs_map["category"]])
       assigned_to = User.find_by_login(row[attrs_map["assigned_to"]])
       fixed_version = Version.find_by_name(row[attrs_map["fixed_version"]])
-  
       # new issue or find exists one
       issue = Issue.new
       journal = nil
@@ -188,7 +187,7 @@ class ImporterController < ApplicationController
           end
         end
       end
-     
+    
       # project affect
       if project == nil
         project = Project.find_by_id(issue.project_id)

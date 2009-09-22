@@ -8,7 +8,7 @@ en:
   label_upload_wrapper: "Field wrap char:"
   
   label_load_rules: "Load saved rules"
-  label_toplines: "Refer to top lines of %s："
+  label_toplines: "Refer to top lines of {{value}}："
   label_match_columns: "Matching Columns"
   label_match_select: "Select match field"
   label_import_rule: "Import rules"
@@ -23,8 +23,8 @@ en:
   label_import_result: "Import Result"
   label_result_notice: "{{handle_count}} issues processed.  {{success_count}} issues successfully imported."
   label_result_projects: "Affected projects:"
-  label_result_issues: "%d issues"
-  label_result_failed: "Failed %d rows:"
+  label_result_issues: "{{count}} issues"
+  label_result_failed: "Failed {{count}} rows:"
   
   option_ignore: "Ignore"
   
