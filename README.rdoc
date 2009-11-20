@@ -1,3 +1,9 @@
-= importer
+= Redmine Issue Importer
 
-Description goes here
+This plugin is broken and should not be used.  If the use of it is
+required, the only option is to run it in a single process, such as
+WEBrick.  Running this in a multi-process/thread environment will almost
+guaranteed run in to errors due to a global variable that was used by
+the initial author.
+
+
