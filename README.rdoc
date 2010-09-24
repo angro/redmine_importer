@@ -1,9 +1,10 @@
 = Redmine Issue Importer
 
-This plugin is broken and should not be used.  If the use of it is
-required, the only option is to run it in a single process, such as
-WEBrick.  Running this in a multi-process/thread environment will almost
-guaranteed run in to errors due to a global variable that was used by
-the initial author.
-
+This plugin seems to be functional now,
+including in multiprocess environments.
+I got rid of the use of instance variables to pass
+data from the match stge to the result stage.
+At this point, it's using the session support
+to pass the data, so extremely large import files
+could use a bit of extra memory on the server.
 
