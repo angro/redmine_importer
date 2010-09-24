@@ -22,21 +22,8 @@ class ImporterController < ApplicationController
     
     # save import file
     @original_filename = file.original_filename
-    tmpfile = Tempfile.new("redmine_importer")
-    if tmpfile
-      tmpfile.write(file.read)
-      tmpfile.close
-      tmpfilename = File.basename(tmpfile.path)
-      if !$tmpfiles
-        $tmpfiles = Hash.new
-      end
-      $tmpfiles[tmpfilename] = tmpfile
-    else
-      flash[:error] = "Cannot save import file."
-      return
-    end
-    
-    session[:importer_tmpfile] = tmpfilename
+    # Abuse of session system, but...
+    session[:importer_csvdata] = file.read
     session[:importer_splitter] = splitter
     session[:importer_wrapper] = wrapper
     session[:importer_encoding] = encoding
@@ -46,8 +33,8 @@ class ImporterController < ApplicationController
     i = 0
     @samples = []
     
-    FasterCSV.foreach(tmpfile.path, {:headers=>true,
-    :encoding=>encoding, :quote_char=>wrapper, :col_sep=>splitter}) do |row|
+    FasterCSV.new(session[:importer_csvdata], {:headers=>true,
+    :encoding=>encoding, :quote_char=>wrapper, :col_sep=>splitter}).each do |row|
       @samples[i] = row
      
       i += 1
@@ -73,18 +60,12 @@ class ImporterController < ApplicationController
   end
 
   def result
-    tmpfilename = session[:importer_tmpfile]
+    csvdata = session[:importer_csvdata]
     splitter = session[:importer_splitter]
     wrapper = session[:importer_wrapper]
     encoding = session[:importer_encoding]
-    
-    if tmpfilename
-      tmpfile = $tmpfiles[tmpfilename]
-      if tmpfile == nil
-        flash[:error] = "Missing imported file"
-        return
-      end
-    end
+    # Give the poor session system some relief
+    session[:importer_csvdata] = ""
     
     default_tracker = params[:default_tracker]
     update_issue = params[:update_issue]
@@ -110,7 +91,7 @@ class ImporterController < ApplicationController
     # attrs_map is fields_map's invert
 
     attrs_map = fields_map.invert
-    FasterCSV.foreach(tmpfile.path, {:headers=>true, :encoding=>encoding, :quote_char=>wrapper, :col_sep=>splitter}) do |row|
+    FasterCSV.new(csvdata, {:headers=>true, :encoding=>encoding, :quote_char=>wrapper, :col_sep=>splitter}).each do |row|
 
       project = Project.find_by_name(row[attrs_map["project"]])
       tracker = Tracker.find_by_name(row[attrs_map["tracker"]])
