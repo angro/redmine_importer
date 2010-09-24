@@ -14,9 +14,12 @@
 	<%= hidden_field_tag 'project_id', @project.id %>
 	<fieldset class="box"><legend><%= l(:label_match_select) %></legend>
 	<% @headers.each do |column| %>
+	     <% matched = ''
+	        @attrs.each do |k,v| if v.to_s.casecmp(column.to_s) == 0 or k.to_s.casecmp(column.to_s) == 0 then matched = v end end
+	        %>
 		 <label class="tabular"><%= column %>:
 		 <%= select_tag "fields_map[#{column}]", "<option value=\"\">#{l(:option_ignore)}</option>" + 
-				options_for_select( @attrs.collect {|a| [a[0],a[1].to_s] }, column.to_s.downcase ) %></label>
+				options_for_select( @attrs, matched ) %></label>
 	<% end %>
 	</fieldset>
 	
