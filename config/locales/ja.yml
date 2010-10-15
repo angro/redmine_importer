@@ -1,0 +1,34 @@
+ja:
+  label_import: "インポート"
+  label_issue_importer: "チケットのインポート"
+  label_upload_notice: "CSVファイルを選択する。ヘーダー行が要る。４MBのサイズの限定がある。"
+  label_upload_format: "ファイルフォーマットのオプション"
+  label_upload_encoding: "エンコーディング："
+  label_upload_splitter: "フィールド区切り文字："
+  label_upload_wrapper: "引用文字："
+  
+  label_load_rules: "保存されたルールを読み込む"
+  label_toplines: "{{value}}の上の行を参考するÔºö"
+  label_match_columns: "マッチされたコラム："
+  label_match_select: "マッチするフィールドを選択："
+  label_import_rule: "インポートのルール"
+  label_default_tracker: "トラッカーのディフォルト："
+  label_update_issue: "存在があるチケットを更新"
+  label_journal_field: "メモとして入るフィールドを選択："
+  label_unique_field: "チケットをマッチするフィールドを選択："
+  label_update_other_project: "他のプロジェクトのチケットでも更新"
+  label_ignore_non_exist: "チケットの存在がなくても無視"
+  label_rule_name: "ルール舞を入れる："
+  
+  label_import_result: "インポートの結果"
+  label_result_notice: "{{handle_count}}行整理された。{{success_count}}行がうまく行った。"
+  label_result_projects: "関われるプロジェクト："
+  label_result_issues: "{{count}}行"
+  label_result_failed: "{{count}}行が失敗："
+  
+  option_ignore: "無視"
+  
+  button_upload: "ファイルをアップ"
+  button_submit: "確認"
+  button_save_rules_and_submit: "マッチルールを保存して確認"
+

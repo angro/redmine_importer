@@ -1,11 +1,11 @@
 en:
   label_import: "Import"
   label_issue_importer: "Issue Importer"
-  label_upload_notice: "Select a CSV file to import. Import file must have a header row."
+  label_upload_notice: "Select a CSV file to import. Import file must have a header row. Maximum size 4MB."
   label_upload_format: "File format settings"
   label_upload_encoding: "Encoding:"
-  label_upload_splitter: "Field seperate char:"
-  label_upload_wrapper: "Field wrap char:"
+  label_upload_splitter: "Field separator character:"
+  label_upload_wrapper: "Field quoting character:"
   
   label_load_rules: "Load saved rules"
   label_toplines: "Refer to top lines of {{value}}："

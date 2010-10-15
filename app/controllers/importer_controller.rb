@@ -14,27 +14,30 @@ class ImporterController < ApplicationController
   end
 
   def match
-    # params 
-    file = params[:file]
-    splitter = params[:splitter]
-    wrapper = params[:wrapper]
-    encoding = params[:encoding]
+    # Delete existing iip to ensure there can't be two iips for a user
+    print "params are ", params
+    ImportInProgress.delete_all(["user_id = ?",User.current.id])
+    # save import-in-progress data
+    iip = ImportInProgress.find_or_create_by_user_id(User.current.id)
+    iip.quote_char = params[:wrapper]
+    iip.col_sep = params[:splitter]
+    iip.encoding = params[:encoding]
+    iip.created = Time.new
+    iip.csv_data = params[:file].read
+    iip.save
     
-    # save import file
-    @original_filename = file.original_filename
-    # Abuse of session system, but...
-    session[:importer_csvdata] = file.read
-    session[:importer_splitter] = splitter
-    session[:importer_wrapper] = wrapper
-    session[:importer_encoding] = encoding
+    # Put the timestamp in the params to detect
+    # users with two imports in progress
+    @import_timestamp = iip.created.strftime("%Y-%m-%d %H:%M:%S")
+    @original_filename = params[:file].original_filename
     
     # display sample
     sample_count = 5
     i = 0
     @samples = []
     
-    FasterCSV.new(session[:importer_csvdata], {:headers=>true,
-    :encoding=>encoding, :quote_char=>wrapper, :col_sep=>splitter}).each do |row|
+    FasterCSV.new(iip.csv_data, {:headers=>true,
+    :encoding=>iip.encoding, :quote_char=>iip.quote_char, :col_sep=>iip.col_sep}).each do |row|
       @samples[i] = row
      
       i += 1
@@ -60,12 +63,27 @@ class ImporterController < ApplicationController
   end
 
   def result
-    csvdata = session[:importer_csvdata]
-    splitter = session[:importer_splitter]
-    wrapper = session[:importer_wrapper]
-    encoding = session[:importer_encoding]
-    # Give the poor session system some relief
-    session[:importer_csvdata] = ""
+    @handle_count = 0
+    @update_count = 0
+    @skip_count = 0
+    @failed_count = 0
+    @failed_issues = Hash.new
+    @affect_projects_issues = Hash.new
+    
+    # Retrieve saved import data
+    iip = ImportInProgress.find_by_user_id(User.current.id)
+    if iip == nil
+      flash[:error] = "No import is currently in progress"
+      return
+    end
+    print "iip.created is ", iip.created
+    print "params[:import_timestamp] is ", params[:import_timestamp] 
+    if iip.created.strftime("%Y-%m-%d %H:%M:%S") != params[:import_timestamp]
+      flash[:error] = "You seem to have started another import " \
+          "since starting this one. " \
+          "This import cannot be completed"
+      return
+    end
     
     default_tracker = params[:default_tracker]
     update_issue = params[:update_issue]
@@ -81,17 +99,11 @@ class ImporterController < ApplicationController
       return
     end
     
-    @handle_count = 0
-    @update_count = 0
-    @skip_count = 0
-    @failed_count = 0
-    @failed_issues = Hash.new
-    @affect_projects_issues = Hash.new
-    
     # attrs_map is fields_map's invert
 
     attrs_map = fields_map.invert
-    FasterCSV.new(csvdata, {:headers=>true, :encoding=>encoding, :quote_char=>wrapper, :col_sep=>splitter}).each do |row|
+    FasterCSV.new(iip.csv_data, {:headers=>true, :encoding=>iip.encoding, 
+        :quote_char=>iip.quote_char, :col_sep=>iip.col_sep}).each do |row|
 
       project = Project.find_by_name(row[attrs_map["project"]])
       tracker = Tracker.find_by_name(row[attrs_map["tracker"]])
@@ -216,6 +228,12 @@ class ImporterController < ApplicationController
       @failed_issues = @failed_issues.sort
       @headers = @failed_issues[0][1].headers
     end
+    
+    # Clean up after ourselves
+    iip.delete
+    
+    # Garbage prevention: clean up iips older than 3 days
+    ImportInProgress.delete_all(["created < ?",Time.new - 3*24*60*60])
   end
 
 private
