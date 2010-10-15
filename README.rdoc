@@ -2,9 +2,13 @@
 
 This plugin seems to be functional now,
 including in multiprocess environments.
-I got rid of the use of instance variables to pass
-data from the match stge to the result stage.
-At this point, it's using the session support
-to pass the data, so extremely large import files
-could use a bit of extra memory on the server.
+The database is used for intermediate storage.
+To install:
+- Download the plugin to your vendors/plugins directory
+- Run 'rake db:migrate_plugins'
+- Restart your redmine as appropriate
+- Go to the Admin/Projects/../Modules
+- Enable "Importer"
+
+en, zh, and ja localizations included.
 
