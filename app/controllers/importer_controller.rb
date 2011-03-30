@@ -8,7 +8,8 @@ class ImporterController < ApplicationController
 
   ISSUE_ATTRS = [:id, :subject, :assigned_to, :fixed_version,
     :author, :description, :category, :priority, :tracker, :status,
-    :start_date, :due_date, :done_ratio, :estimated_hours]
+    :start_date, :due_date, :done_ratio, :estimated_hours,
+    :parent_issue]
   
   def index
   end
@@ -93,15 +94,16 @@ class ImporterController < ApplicationController
     ignore_non_exist = params[:ignore_non_exist]
     fields_map = params[:fields_map]
     unique_attr = fields_map[unique_field]
+
+    # attrs_map is fields_map's invert
+    attrs_map = fields_map.invert
+
     # check params
-    if update_issue && unique_attr == nil
-      flash[:error] = "Unique field hasn't match an issue's field"
+    if (update_issue || attrs_map["parent_issue"] != nil) && unique_attr == nil
+      flash[:error] = "Unique field doesn't match an issue's field"
       return
     end
-    
-    # attrs_map is fields_map's invert
 
-    attrs_map = fields_map.invert
     FasterCSV.new(iip.csv_data, {:headers=>true, :encoding=>iip.encoding, 
         :quote_char=>iip.quote_char, :col_sep=>iip.col_sep}).each do |row|
 
@@ -202,6 +204,39 @@ class ImporterController < ApplicationController
       issue.fixed_version_id = fixed_version != nil ? fixed_version.id : issue.fixed_version_id
       issue.done_ratio = row[attrs_map["done_ratio"]] || issue.done_ratio
       issue.estimated_hours = row[attrs_map["estimated_hours"]] || issue.estimated_hours
+
+      # parent issue
+      if row[attrs_map["parent_issue"]] != nil
+        if unique_attr == "id"
+          parent_issues = [Issue.find_by_id(row[unique_field])]
+        else
+          query = Query.new(:name => "_importer", :project => @project)
+          query.add_filter("status_id", "*", [1])
+          query.add_filter(unique_attr, "=", [row[attrs_map["parent_issue"]]])
+          logger.info("Querying for parent issue with #{unique_attr} = '#{row[unique_field]}")
+
+          parent_issues = Issue.find :all, :conditions => query.statement, :limit => 2, :include => [ :assigned_to, :status, :tracker, :project, :priority, :category, :fixed_version ]
+        end
+        
+        if parent_issues.size > 1
+          flash[:warning] = "Unique field #{unique_field} has duplicate record"
+          @failed_count += 1
+          @failed_issues[@handle_count + 1] = row
+          break
+        else
+          if parent_issues.size > 0
+            # found issue
+            issue.parent_issue_id = parent_issues.first.id
+            
+          else
+            # ignore none exist issues
+            if ignore_non_exist
+              @skip_count += 1
+              next
+            end
+          end
+        end
+      end
 
       # custom fields
       issue.custom_field_values = issue.available_custom_fields.inject({}) do |h, c|
