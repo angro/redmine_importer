@@ -108,10 +108,10 @@ class ImporterController < ApplicationController
       project = Project.find_by_name(row[attrs_map["project"]])
       tracker = Tracker.find_by_name(row[attrs_map["tracker"]])
       status = IssueStatus.find_by_name(row[attrs_map["status"]])
-      author = User.find_by_login(row[attrs_map["author"]])
+      author = attrs_map["author"] ? User.find_by_login(row[attrs_map["author"]]) : User.current
       priority = Enumeration.find_by_name(row[attrs_map["priority"]])
       category = IssueCategory.find_by_name(row[attrs_map["category"]])
-      assigned_to = User.find_by_login(row[attrs_map["assigned_to"]])
+      assigned_to = row[attrs_map["assigned_to"]] != nil ? User.find_by_login(row[attrs_map["assigned_to"]]) : nil
       fixed_version = Version.find_by_name(row[attrs_map["fixed_version"]])
       # new issue or find exists one
       issue = Issue.new
