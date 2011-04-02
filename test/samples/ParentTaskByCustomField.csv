@@ -1,0 +1,4 @@
+"Subject","Description","External id","Parent task"
+"The overall task","A truly critical deed.","7643-4",
+"The first sub-task","Something that would be useful.","7644-6","7643-4"
+"The second sub-task","A really important component","7644-7","7643-4"

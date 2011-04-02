@@ -12,3 +12,5 @@ To install:
 
 en, zh, and ja localizations included.
 
+User documentation at https://github.com/leovitch/redmine_importer/wiki.
+

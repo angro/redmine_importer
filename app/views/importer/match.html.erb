@@ -28,19 +28,18 @@
 		<label><%= l(:label_default_tracker) %>
 		<%= select_tag "default_tracker", options_from_collection_for_select(@project.trackers, 'id', 'name') %></label><br/>
 		
+		<label><%= l(:label_unique_field) %>
+		<%= select_tag "unique_field", options_for_select(@headers) %></label><br/>
+		
 		<label><%= check_box_tag "update_issue", true, false %> <%= l(:label_update_issue) %>
 		</label><br/>
 		<%= observe_field("update_issue", :function => <<END_OF_STRING
-document.getElementById("unique_field").disabled = !element.checked;
 document.getElementById("journal_field").disabled = !element.checked;
 document.getElementById("update_other_project").disabled = !element.checked;
 document.getElementById("ignore_non_exist").disabled = !element.checked;
 END_OF_STRING
 )
 		%>
-		
-		&nbsp;&nbsp;&nbsp;&nbsp;<label><%= l(:label_unique_field) %>
-		<%= select_tag "unique_field", options_for_select(@headers), {:disabled => true} %></label><br/>
 		
 		&nbsp;&nbsp;&nbsp;&nbsp;<label><%= l(:label_journal_field) %>
 		<%= select_tag "journal_field", "<option value=\"\">#{l(:option_ignore)}</option>" + options_for_select(@headers), {:disabled => true} %></label><br/>

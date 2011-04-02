@@ -1,6 +1,12 @@
 require 'fastercsv'
 require 'tempfile'
 
+class MultipleIssuesForUniqueValue < Exception
+end
+
+class NoIssueForUniqueValue < Exception
+end
+
 class ImporterController < ApplicationController
   unloadable
   
@@ -62,6 +68,35 @@ class ImporterController < ApplicationController
     end
     @attrs.sort!
   end
+  
+  def issue_for_unique_attr(unique_attr, attr_value)
+    if unique_attr == "id"
+      issues = [Issue.find_by_id(attr_value)]
+    else
+      query = Query.new(:name => "_importer", :project => @project)
+      query.add_filter("status_id", "*", [1])
+      query.add_filter(unique_attr, "=", [attr_value])
+      logger.info("Querying for issue with #{unique_attr} = '#{attr_value}'")
+
+      issues = Issue.find :all, :conditions => query.statement, :limit => 2, :include => [ :assigned_to, :status, :tracker, :project, :priority, :category, :fixed_version ]
+      logger.info("condition for parent query is #{query.statement}")
+    end
+    
+    if issues.size > 1
+      issues.each do |pi|
+        logger.info("Found parent #{pi}")
+      end
+      flash[:warning] = "Unique field #{unique_attr}  with value '#{attr_value}' has duplicate record"
+      @failed_count += 1
+      @failed_issues[@handle_count + 1] = row
+      raise MultipleIssuesForUniqueValue, "Unique field #{unique_attr}  with value '#{attr_value}' has duplicate record"
+    else
+      if issues.size == 0
+        raise NoIssueForUniqueValue, "No issue with #{unique_attr} of '#{attr_value}' found"
+      end
+      issues.first
+    end
+  end
 
   def result
     @handle_count = 0
@@ -94,6 +129,7 @@ class ImporterController < ApplicationController
     ignore_non_exist = params[:ignore_non_exist]
     fields_map = params[:fields_map]
     unique_attr = fields_map[unique_field]
+    unique_attr_checked = false  # Used to optimize some work that has to happen inside the loop   
 
     # attrs_map is fields_map's invert
     attrs_map = fields_map.invert
@@ -122,64 +158,52 @@ class ImporterController < ApplicationController
       issue.tracker_id = tracker != nil ? tracker.id : default_tracker
       issue.author_id = author != nil ? author.id : User.current.id
 
-      if update_issue
-        # custom field
+      # reprocess unique_attr if it's a custom field -- only on the first issue
+      if !unique_attr_checked
         if !ISSUE_ATTRS.include?(unique_attr.to_sym)
           issue.available_custom_fields.each do |cf|
             if cf.name == unique_attr
               unique_attr = "cf_#{cf.id}"
               break
             end
-          end 
+          end
         end
-        
-        if unique_attr == "id"
-          issues = [Issue.find_by_id(row[unique_field])]
-        else
-          query = Query.new(:name => "_importer", :project => @project)
-          query.add_filter("status_id", "*", [1])
-          query.add_filter(unique_attr, "=", [row[unique_field]])
+        unique_attr_checked = true
+      end
 
-          issues = Issue.find :all, :conditions => query.statement, :limit => 2, :include => [ :assigned_to, :status, :tracker, :project, :priority, :category, :fixed_version ]
-        end
-        
-        if issues.size > 1
-          flash[:warning] = "Unique field #{unique_field} has duplicate record"
-          @failed_count += 1
-          @failed_issues[@handle_count + 1] = row
-          break
-        else
-          if issues.size > 0
-            # found issue
-            issue = issues.first
-            
-            # ignore other project's issue or not
-            if issue.project_id != @project.id && !update_other_project
-              @skip_count += 1
-              next              
-            end
-            
-            # ignore closed issue except reopen
-            if issue.status.is_closed?
-              if status == nil || status.is_closed?
-                @skip_count += 1
-                next
-              end
-            end
-            
-            # init journal
-            note = row[journal_field] || ''
-            journal = issue.init_journal(author || User.current, 
-              note || '')
-              
-            @update_count += 1
-          else
-            # ignore none exist issues
-            if ignore_non_exist
+      if update_issue
+        begin
+          issue = issue_for_unique_attr(unique_attr,row[unique_field])
+          
+          # ignore other project's issue or not
+          if issue.project_id != @project.id && !update_other_project
+            @skip_count += 1
+            next
+          end
+          
+          # ignore closed issue except reopen
+          if issue.status.is_closed?
+            if status == nil || status.is_closed?
               @skip_count += 1
               next
             end
           end
+          
+          # init journal
+          note = row[journal_field] || ''
+          journal = issue.init_journal(author || User.current, 
+            note || '')
+            
+          @update_count += 1
+          
+        rescue NoIssueForUniqueValue
+          if ignore_non_exist
+            @skip_count += 1
+            next
+          end
+          
+        rescue MultipleIssuesForUniqueValue
+          break
         end
       end
     
@@ -205,37 +229,18 @@ class ImporterController < ApplicationController
       issue.done_ratio = row[attrs_map["done_ratio"]] || issue.done_ratio
       issue.estimated_hours = row[attrs_map["estimated_hours"]] || issue.estimated_hours
 
-      # parent issue
-      if row[attrs_map["parent_issue"]] != nil
-        if unique_attr == "id"
-          parent_issues = [Issue.find_by_id(row[unique_field])]
-        else
-          query = Query.new(:name => "_importer", :project => @project)
-          query.add_filter("status_id", "*", [1])
-          query.add_filter(unique_attr, "=", [row[attrs_map["parent_issue"]]])
-          logger.info("Querying for parent issue with #{unique_attr} = '#{row[unique_field]}")
-
-          parent_issues = Issue.find :all, :conditions => query.statement, :limit => 2, :include => [ :assigned_to, :status, :tracker, :project, :priority, :category, :fixed_version ]
+      # issue relations & parent issues
+      begin
+        if row[attrs_map["parent_issue"]] != nil
+          issue.parent_issue_id = issue_for_unique_attr(unique_attr,row[attrs_map["parent_issue"]]).id
         end
-        
-        if parent_issues.size > 1
-          flash[:warning] = "Unique field #{unique_field} has duplicate record"
-          @failed_count += 1
-          @failed_issues[@handle_count + 1] = row
-          break
-        else
-          if parent_issues.size > 0
-            # found issue
-            issue.parent_issue_id = parent_issues.first.id
-            
-          else
-            # ignore none exist issues
-            if ignore_non_exist
-              @skip_count += 1
-              next
-            end
-          end
+      rescue NoIssueForUniqueValue
+        if ignore_non_exist
+          @skip_count += 1
+          next
         end
+      rescue MultipleIssuesForUniqueValue
+        break
       end
 
       # custom fields
