@@ -15,7 +15,7 @@ en:
   label_default_tracker: "Default tracker:"
   label_update_issue: "Update existing issues"
   label_journal_field: "Select column to use as note:"
-  label_unique_field: "Select unique-valued column for updating or importing relations:"
+  label_unique_field: "Select unique-valued column (required for updating existing issues or importing relations):"
   label_update_other_project: "Allow updating issues from other projects"
   label_ignore_non_exist: "Ignore non-existant issues"
   label_rule_name: "Input rule name"

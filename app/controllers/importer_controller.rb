@@ -22,7 +22,6 @@ class ImporterController < ApplicationController
 
   def match
     # Delete existing iip to ensure there can't be two iips for a user
-    print "params are ", params
     ImportInProgress.delete_all(["user_id = ?",User.current.id])
     # save import-in-progress data
     iip = ImportInProgress.find_or_create_by_user_id(User.current.id)
@@ -66,26 +65,29 @@ class ImporterController < ApplicationController
     @project.all_issue_custom_fields.each do |cfield|
       @attrs.push([cfield.name, cfield.name])
     end
+    IssueRelation::TYPES.each_pair do |rtype, rinfo|
+      @attrs.push([l_or_humanize(rinfo[:name]),rtype])
+    end
     @attrs.sort!
   end
   
+  # Returns the issue object associated with the given value of the given attribute.
+  # Raises NoIssueForUniqueValue if not found or MultipleIssuesForUniqueValue
   def issue_for_unique_attr(unique_attr, attr_value)
+    if @issue_by_unique_attr.has_key?(attr_value)
+      return @issue_by_unique_attr[attr_value]
+    end
     if unique_attr == "id"
       issues = [Issue.find_by_id(attr_value)]
     else
       query = Query.new(:name => "_importer", :project => @project)
       query.add_filter("status_id", "*", [1])
       query.add_filter(unique_attr, "=", [attr_value])
-      logger.info("Querying for issue with #{unique_attr} = '#{attr_value}'")
 
       issues = Issue.find :all, :conditions => query.statement, :limit => 2, :include => [ :assigned_to, :status, :tracker, :project, :priority, :category, :fixed_version ]
-      logger.info("condition for parent query is #{query.statement}")
     end
     
     if issues.size > 1
-      issues.each do |pi|
-        logger.info("Found parent #{pi}")
-      end
       flash[:warning] = "Unique field #{unique_attr}  with value '#{attr_value}' has duplicate record"
       @failed_count += 1
       @failed_issues[@handle_count + 1] = row
@@ -105,6 +107,9 @@ class ImporterController < ApplicationController
     @failed_count = 0
     @failed_issues = Hash.new
     @affect_projects_issues = Hash.new
+    # This is a cache of previously inserted issues indexed by the value
+    # the user provided in the unique column
+    @issue_by_unique_attr = Hash.new
     
     # Retrieve saved import data
     iip = ImportInProgress.find_by_user_id(User.current.id)
@@ -112,8 +117,6 @@ class ImporterController < ApplicationController
       flash[:error] = "No import is currently in progress"
       return
     end
-    print "iip.created is ", iip.created
-    print "params[:import_timestamp] is ", params[:import_timestamp] 
     if iip.created.strftime("%Y-%m-%d %H:%M:%S") != params[:import_timestamp]
       flash[:error] = "You seem to have started another import " \
           "since starting this one. " \
@@ -123,7 +126,7 @@ class ImporterController < ApplicationController
     
     default_tracker = params[:default_tracker]
     update_issue = params[:update_issue]
-    unique_field = params[:unique_field]
+    unique_field = params[:unique_field].empty? ? nil : params[:unique_field]
     journal_field = params[:journal_field]
     update_other_project = params[:update_other_project]
     ignore_non_exist = params[:ignore_non_exist]
@@ -135,8 +138,15 @@ class ImporterController < ApplicationController
     attrs_map = fields_map.invert
 
     # check params
-    if (update_issue || attrs_map["parent_issue"] != nil) && unique_attr == nil
-      flash[:error] = "Unique field doesn't match an issue's field"
+    unique_required = update_issue  || attrs_map["parent_issue"] != nil
+    IssueRelation::TYPES.each_key do |rtype|
+      if attrs_map[rtype]
+        unique_required = true
+        break
+      end
+    end
+    if unique_required && unique_attr == nil
+      flash[:error] = "Unique field must be specified"
       return
     end
 
@@ -158,9 +168,9 @@ class ImporterController < ApplicationController
       issue.tracker_id = tracker != nil ? tracker.id : default_tracker
       issue.author_id = author != nil ? author.id : User.current.id
 
-      # reprocess unique_attr if it's a custom field -- only on the first issue
+      # trnaslate unique_attr if it's a custom field -- only on the first issue
       if !unique_attr_checked
-        if !ISSUE_ATTRS.include?(unique_attr.to_sym)
+        if unique_field && !ISSUE_ATTRS.include?(unique_attr.to_sym)
           issue.available_custom_fields.each do |cf|
             if cf.name == unique_attr
               unique_attr = "cf_#{cf.id}"
@@ -229,7 +239,7 @@ class ImporterController < ApplicationController
       issue.done_ratio = row[attrs_map["done_ratio"]] || issue.done_ratio
       issue.estimated_hours = row[attrs_map["estimated_hours"]] || issue.estimated_hours
 
-      # issue relations & parent issues
+      # parent issues
       begin
         if row[attrs_map["parent_issue"]] != nil
           issue.parent_issue_id = issue_for_unique_attr(unique_attr,row[attrs_map["parent_issue"]]).id
@@ -255,6 +265,31 @@ class ImporterController < ApplicationController
         # 记录错误
         @failed_count += 1
         @failed_issues[@handle_count + 1] = row
+      else
+        if unique_field
+          @issue_by_unique_attr[row[unique_field]] = issue
+        end
+        # Issue relations
+        begin
+          IssueRelation::TYPES.each_pair do |rtype, rinfo|
+            if !row[attrs_map[rtype]]
+              next
+            end
+            other_issue = issue_for_unique_attr(unique_attr,row[attrs_map[rtype]])
+            relations = issue.relations.select { |r| (r.other_issue(issue).id == other_issue.id) && (r.relation_type_for(issue) == rtype) }
+            if relations.length == 0
+              relation = IssueRelation.new( :issue_from => issue, :issue_to => other_issue, :relation_type => rtype )
+              relation.save
+            end
+          end
+        rescue NoIssueForUniqueValue
+          if ignore_non_exist
+            @skip_count += 1
+            next
+          end
+        rescue MultipleIssuesForUniqueValue
+          break
+        end
       end
   
       if journal

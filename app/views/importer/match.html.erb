@@ -29,7 +29,8 @@
 		<%= select_tag "default_tracker", options_from_collection_for_select(@project.trackers, 'id', 'name') %></label><br/>
 		
 		<label><%= l(:label_unique_field) %>
-		<%= select_tag "unique_field", options_for_select(@headers) %></label><br/>
+		<%= select_tag "unique_field", "<option value=\"\">#{l(:option_ignore)}</option>" +
+      options_for_select(@headers) %></label><br/>
 		
 		<label><%= check_box_tag "update_issue", true, false %> <%= l(:label_update_issue) %>
 		</label><br/>

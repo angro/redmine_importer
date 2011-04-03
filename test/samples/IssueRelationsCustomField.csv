@@ -1,0 +1,10 @@
+"Subject","Description","External id","Parent task","follows"
+"Run the company","What we actually have to do","T55",,
+"Major new project","The top-level new task","T56","T55",
+"Market Research","Find out what people what to buy","T57","T56",
+"Research and Development","Design that thing","T58","T56","T57"
+"Manufacturing Engineering","Figure out how to make that thing","T59","T56","T58"
+"Manufacturing","Make that thing","T60","T56","T59"
+"Marketing","Convince people they really want that thing","T61","T56","T58"
+"Sales","Sell people that thing","T62","T56","T60"
+"Investor Relations","Keep the investors happy in the meantime","T63","T55",
