@@ -15,7 +15,7 @@ class ImporterController < ApplicationController
   ISSUE_ATTRS = [:id, :subject, :assigned_to, :fixed_version,
     :author, :description, :category, :priority, :tracker, :status,
     :start_date, :due_date, :done_ratio, :estimated_hours,
-    :parent_issue]
+    :parent_issue, :watchers ]
   
   def index
   end
@@ -161,6 +161,7 @@ class ImporterController < ApplicationController
       category = IssueCategory.find_by_name(row[attrs_map["category"]])
       assigned_to = row[attrs_map["assigned_to"]] != nil ? User.find_by_login(row[attrs_map["assigned_to"]]) : nil
       fixed_version = Version.find_by_name(row[attrs_map["fixed_version"]])
+      watchers = row[attrs_map["watchers"]]
       # new issue or find exists one
       issue = Issue.new
       journal = nil
@@ -260,6 +261,20 @@ class ImporterController < ApplicationController
         end
         h
       end
+      
+      # watchers
+      if watchers
+        addable_watcher_users = issue.addable_watcher_users
+        watchers.split(',').each do |watcher|
+          watcher_user = User.find_by_login(watcher)
+          if (!watcher_user) || (issue.watcher_users.include?(watcher_user))
+            next
+          end
+          if addable_watcher_users.include?(watcher_user)
+            issue.add_watcher(watcher_user)
+          end
+        end
+      end
 
       if (!issue.save)
         # 记录错误
@@ -269,6 +284,7 @@ class ImporterController < ApplicationController
         if unique_field
           @issue_by_unique_attr[row[unique_field]] = issue
         end
+
         # Issue relations
         begin
           IssueRelation::TYPES.each_pair do |rtype, rinfo|
