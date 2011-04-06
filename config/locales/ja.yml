@@ -15,6 +15,8 @@ ja:
   label_default_tracker: "トラッカーのディフォルト："
   label_update_issue: "存在があるチケットを更新："
   label_journal_field: "メモとして入るフィールドを選択："
+  label_importer_add_categories: "新しいカテゴリなら自動的に追加"
+  label_importer_add_versions: "新しいターゲットのバージョンなら自動的に追加"
   label_unique_field: "一意な値がある欄を選択（存在がある更新または連携をインポートする際に必須）："
   label_update_other_project: "他のプロジェクトのチケットでも更新"
   label_ignore_non_exist: "チケットの存在がなくても無視"

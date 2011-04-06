@@ -131,6 +131,8 @@ class ImporterController < ApplicationController
     update_other_project = params[:update_other_project]
     ignore_non_exist = params[:ignore_non_exist]
     fields_map = params[:fields_map]
+    add_categories = params[:add_categories]
+    add_versions = params[:add_versions]
     unique_attr = fields_map[unique_field]
     unique_attr_checked = false  # Used to optimize some work that has to happen inside the loop   
 
@@ -154,13 +156,26 @@ class ImporterController < ApplicationController
         :quote_char=>iip.quote_char, :col_sep=>iip.col_sep}).each do |row|
 
       project = Project.find_by_name(row[attrs_map["project"]])
+      if !project
+        project = @project
+      end
       tracker = Tracker.find_by_name(row[attrs_map["tracker"]])
       status = IssueStatus.find_by_name(row[attrs_map["status"]])
       author = attrs_map["author"] ? User.find_by_login(row[attrs_map["author"]]) : User.current
       priority = Enumeration.find_by_name(row[attrs_map["priority"]])
-      category = IssueCategory.find_by_name(row[attrs_map["category"]])
+      category_name = row[attrs_map["category"]]
+      category = IssueCategory.find_by_name(category_name)
+      if (!category) && category_name && category_name.length > 0 && add_categories
+        category = project.issue_categories.build(:name => category_name)
+        category.save
+      end
       assigned_to = row[attrs_map["assigned_to"]] != nil ? User.find_by_login(row[attrs_map["assigned_to"]]) : nil
-      fixed_version = Version.find_by_name(row[attrs_map["fixed_version"]])
+      fixed_version_name = row[attrs_map["fixed_version"]]
+      fixed_version = Version.find_by_name(fixed_version_name)
+      if (!fixed_version) && fixed_version_name && fixed_version_name.length > 0 && add_versions
+        fixed_version = project.versions.build(:name=>fixed_version_name)
+        fixed_version.save
+      end
       watchers = row[attrs_map["watchers"]]
       # new issue or find exists one
       issue = Issue.new
