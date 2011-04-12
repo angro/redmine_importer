@@ -131,6 +131,7 @@ class ImporterController < ApplicationController
     update_other_project = params[:update_other_project]
     ignore_non_exist = params[:ignore_non_exist]
     fields_map = params[:fields_map]
+    send_emails = params[:send_emails]
     add_categories = params[:add_categories]
     add_versions = params[:add_versions]
     unique_attr = fields_map[unique_field]
@@ -298,6 +299,18 @@ class ImporterController < ApplicationController
       else
         if unique_field
           @issue_by_unique_attr[row[unique_field]] = issue
+        end
+        
+        if send_emails
+          if update_issue
+            if Setting.notified_events.include?('issue_updated')
+              Mailer.deliver_issue_edit(issue.current_journal)
+            end
+          else
+            if Setting.notified_events.include?('issue_added')
+              Mailer.deliver_issue_add(issue)
+            end
+          end
         end
 
         # Issue relations

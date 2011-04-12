@@ -32,6 +32,7 @@
 		<%= select_tag "unique_field", "<option value=\"\">#{l(:option_ignore)}</option>" +
       options_for_select(@headers) %></label><br/>
 
+    <label><%= check_box_tag "send_emails", true, true %> <%= l(:label_importer_send_emails) %> </label><br/>
     <label><%= check_box_tag "add_categories", true, true %> <%= l(:label_importer_add_categories) %> </label><br/>		
     <label><%= check_box_tag "add_versions", true, true %> <%= l(:label_importer_add_versions) %> </label><br/>		
 		<label><%= check_box_tag "update_issue", true, false %> <%= l(:label_update_issue) %>

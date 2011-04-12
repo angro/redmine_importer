@@ -13,6 +13,7 @@ en:
   label_match_select: "Select field to set from each column:"
   label_import_rule: "Import rules"
   label_default_tracker: "Default tracker:"
+  label_importer_send_emails: "Send notification emails"
   label_importer_add_categories: "Auto-add categories"
   label_importer_add_versions: "Auto-add target versions"
   label_update_issue: "Update existing issues"
