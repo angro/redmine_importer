@@ -1,3 +1,3 @@
-"Subject","Description","Parent task"
+"Subject","Description","Parent issue"
 "Task #1","This is a parent task.",
 "Task #1-1","This is a child task.","Task #1"

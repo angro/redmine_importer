@@ -1,4 +1,4 @@
-"Subject","Description","External id","Parent task","follows"
+"Subject","Description","External id","Parent issue","follows"
 "Run the company","What we actually have to do","T55",,
 "Major new project","The top-level new task","T56","T55",
 "Market Research","Find out what people what to buy","T57","T56",

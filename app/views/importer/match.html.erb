@@ -16,7 +16,7 @@
 	<fieldset class="box"><legend><%= l(:label_match_select) %></legend>
 	<% @headers.each do |column| %>
 	     <% matched = ''
-	        @attrs.each do |k,v| if v.to_s.casecmp(column.to_s) == 0 or k.to_s.casecmp(column.to_s) == 0 then matched = v end end
+	        @attrs.each do |k,v| if v.to_s.casecmp(column.to_s.sub(" ") {|sp| "_" }) == 0 or k.to_s.casecmp(column.to_s) == 0 then matched = v end end
 	        %>
 		 <label class="tabular"><%= column %>:
 		 <%= select_tag "fields_map[#{column}]", "<option value=\"\">#{l(:option_ignore)}</option>" + 

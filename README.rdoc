@@ -10,7 +10,7 @@ To install:
 - Go to the Admin/Projects/../Modules
 - Enable "Importer"
 
-en, zh, and ja localizations included.
+en, de, zh, and ja localizations included.
 
 User documentation at https://github.com/leovitch/redmine_importer/wiki.
 
