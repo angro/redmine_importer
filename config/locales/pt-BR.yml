@@ -1,4 +1,4 @@
-pt_BR:
+pt-BR:
   label_import: "Importar"
   label_issue_importer: "Importador de Tarefas"
   label_upload_notice: "Selecione um arquivo CSV para importar. Arquivo de importação deve ter uma linha de cabeçalho. Tamanho máximo 4MB."
