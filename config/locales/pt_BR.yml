@@ -27,7 +27,7 @@ pt_BR:
   label_result_notice: "{{handle_count}} tarefas processadas.  {{success_count}} tarefas importadas com sucesso."
   label_result_projects: "Projetos afetados:"
   label_result_issues: "{{count}} tarefas"
-  label_result_failed: "Failed {{count}} linhas:"
+  label_result_failed: "{{count}} linhas falharam:"
   
   option_ignore: "Ignorar"
   
