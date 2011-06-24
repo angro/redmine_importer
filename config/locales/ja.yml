@@ -35,3 +35,6 @@ ja:
   button_submit: "確認"
   button_save_rules_and_submit: "マッチルールを保存して確認"
 
+  text_rmi_specify_unique_field_for_update: "存在があるチケットの更新を選択されたので一意な値がある欄を選択が必要です。"
+  text_rmi_specify_unique_field_for_column: "「{{column}}」という連携があるコラムをインポートしているので一意な値がある欄を選択が必要です。" 
+

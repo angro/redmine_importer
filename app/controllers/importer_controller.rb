@@ -141,15 +141,21 @@ class ImporterController < ApplicationController
     attrs_map = fields_map.invert
 
     # check params
-    unique_required = update_issue  || attrs_map["parent_issue"] != nil
-    IssueRelation::TYPES.each_key do |rtype|
-      if attrs_map[rtype]
-        unique_required = true
-        break
+    unique_error = nil
+    if update_issue
+      unique_error = l(:text_rmi_specify_unique_field_for_update)
+    elsif attrs_map["parent_issue"] != nil
+      unique_error = l(:text_rmi_specify_unique_field_for_column,:column => l(:field_parent_issue))
+    else
+      IssueRelation::TYPES.each_key do |rtype|
+        if attrs_map[rtype]
+          unique_error = l(:text_rmi_specify_unique_field_for_column,:column => l("label_#{rtype}".to_sym))
+          break
+        end
       end
     end
-    if unique_required && unique_attr == nil
-      flash[:error] = "Unique field must be specified"
+    if unique_error && unique_attr == nil
+      flash[:error] = unique_error
       return
     end
 

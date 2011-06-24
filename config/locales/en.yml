@@ -34,3 +34,7 @@ en:
   button_upload: "Upload File"
   button_submit: "Submit"
   button_save_rules_and_submit: "Save match rules and submit"
+
+  text_rmi_specify_unique_field_for_update: "Unique field must be specified because Update existing issues is on"
+  text_rmi_specify_unique_field_for_column: "Unique field must be specified because the column {{column}} needs to refer to other tasks" 
+
