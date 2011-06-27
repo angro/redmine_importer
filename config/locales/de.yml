@@ -35,5 +35,5 @@ de:
   button_submit: "Abschicken"
   button_save_rules_and_submit: "Abschicken und Abgleich-Regel speichern"
 
-  text_rmi_specify_unique_field_for_update: "Unique field must be specified because Update existing issues is on"
-  text_rmi_specify_unique_field_for_column: "Unique field must be specified because the column {{column}} needs to refer to other tasks" 
+  text_rmi_specify_unique_field_for_update: "Ein eindeutiges Feld muss definiert sein, da die Einstellung für das Update von bestehenden Tickets gesetzt ist."
+  text_rmi_specify_unique_field_for_column: "Ein eindeutiges Feld muss definiert sein, da die Spalte {{column}} auf andere Tasks zeigen muss."
