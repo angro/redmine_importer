@@ -7,6 +7,13 @@ end
 class NoIssueForUniqueValue < Exception
 end
 
+class Journal < ActiveRecord::Base
+  def empty?(*args)
+    (details.empty? && notes.blank?)
+  end
+  
+end
+
 class ImporterController < ApplicationController
   unloadable
   
@@ -309,7 +316,7 @@ class ImporterController < ApplicationController
         
         if send_emails
           if update_issue
-            if Setting.notified_events.include?('issue_updated')
+            if Setting.notified_events.include?('issue_updated') && (!issue.current_journal.empty?)
               Mailer.deliver_issue_edit(issue.current_journal)
             end
           else
