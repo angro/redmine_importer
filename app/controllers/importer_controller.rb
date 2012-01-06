@@ -80,7 +80,7 @@ class ImporterController < ApplicationController
   
   # Returns the issue object associated with the given value of the given attribute.
   # Raises NoIssueForUniqueValue if not found or MultipleIssuesForUniqueValue
-  def issue_for_unique_attr(unique_attr, attr_value)
+  def issue_for_unique_attr(unique_attr, attr_value, row_data)
     if @issue_by_unique_attr.has_key?(attr_value)
       return @issue_by_unique_attr[attr_value]
     end
@@ -97,7 +97,7 @@ class ImporterController < ApplicationController
     if issues.size > 1
       flash[:warning] = "Unique field #{unique_attr}  with value '#{attr_value}' has duplicate record"
       @failed_count += 1
-      @failed_issues[@handle_count + 1] = row
+      @failed_issues[@handle_count + 1] = row_data
       raise MultipleIssuesForUniqueValue, "Unique field #{unique_attr}  with value '#{attr_value}' has duplicate record"
     else
       if issues.size == 0
@@ -213,7 +213,7 @@ class ImporterController < ApplicationController
 
       if update_issue
         begin
-          issue = issue_for_unique_attr(unique_attr,row[unique_field])
+          issue = issue_for_unique_attr(unique_attr,row[unique_field],row)
           
           # ignore other project's issue or not
           if issue.project_id != @project.id && !update_other_project
@@ -272,7 +272,7 @@ class ImporterController < ApplicationController
       # parent issues
       begin
         if row[attrs_map["parent_issue"]] != nil
-          issue.parent_issue_id = issue_for_unique_attr(unique_attr,row[attrs_map["parent_issue"]]).id
+          issue.parent_issue_id = issue_for_unique_attr(unique_attr,row[attrs_map["parent_issue"]],row).id
         end
       rescue NoIssueForUniqueValue
         if ignore_non_exist
@@ -332,7 +332,7 @@ class ImporterController < ApplicationController
             if !row[attrs_map[rtype]]
               next
             end
-            other_issue = issue_for_unique_attr(unique_attr,row[attrs_map[rtype]])
+            other_issue = issue_for_unique_attr(unique_attr,row[attrs_map[rtype]],row)
             relations = issue.relations.select { |r| (r.other_issue(issue).id == other_issue.id) && (r.relation_type_for(issue) == rtype) }
             if relations.length == 0
               relation = IssueRelation.new( :issue_from => issue, :issue_to => other_issue, :relation_type => rtype )
