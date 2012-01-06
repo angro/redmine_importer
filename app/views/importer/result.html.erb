@@ -3,7 +3,7 @@
 <% end %>
 
 <h2><%= l(:label_import_result) %></h2>
-<p><%= l(:label_result_notice, :handle_count => @handle_count, :success_count => (@handle_count - @failed_count)) %></p>
+<p><%= l(:label_result_notice, :handle_count => @handle_count, :success_count => @handle_count) %></p>
 <p><%= l(:label_result_projects) %><br/>
 <% @affect_projects_issues.each do |project, count|%>
 <label class="tabular2"><%= project %>:</label><label class="tabular2"><%= l(:label_result_issues, count) %></label><br/>
