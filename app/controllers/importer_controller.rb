@@ -142,7 +142,7 @@ class ImporterController < ApplicationController
   # will create a new version and save it when it doesn't exist yet.
   def version_id_for_name!(project,name,add_versions)
     if !@version_id_by_name.has_key?(name)
-      version = Version.find_by_name(name)
+      version = Version.find_by_project_id_and_name(project.id, name)
       if !version
         if name && (name.length > 0) && add_versions
           version = project.versions.build(:name=>name)
@@ -235,7 +235,7 @@ class ImporterController < ApplicationController
         author = attrs_map["author"] ? user_for_login!(row[attrs_map["author"]]) : User.current
         priority = Enumeration.find_by_name(row[attrs_map["priority"]])
         category_name = row[attrs_map["category"]]
-        category = IssueCategory.find_by_name(category_name)
+        category = IssueCategory.find_by_project_id_and_name(project.id, category_name)
         if (!category) && category_name && category_name.length > 0 && add_categories
           category = project.issue_categories.build(:name => category_name)
           category.save
