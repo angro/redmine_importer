@@ -339,7 +339,7 @@ class ImporterController < ApplicationController
       # parent issues
       begin
         parent_value = row[attrs_map["parent_issue"]]
-        if parent_value != nil
+        if parent_value && (parent_value.length > 0)
           issue.parent_issue_id = issue_for_unique_attr(unique_attr,parent_value,row).id
         end
       rescue NoIssueForUniqueValue
