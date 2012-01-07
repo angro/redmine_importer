@@ -242,7 +242,7 @@ class ImporterController < ApplicationController
         end
         assigned_to = row[attrs_map["assigned_to"]] != nil ? user_for_login!(row[attrs_map["assigned_to"]]) : nil
         fixed_version_name = row[attrs_map["fixed_version"]]
-        fixed_version_id = version_id_for_name!(project,fixed_version_name,add_versions)
+        fixed_version_id = fixed_version_name ? version_id_for_name!(project,fixed_version_name,add_versions) : nil
         watchers = row[attrs_map["watchers"]]
         # new issue or find exists one
         issue = Issue.new
