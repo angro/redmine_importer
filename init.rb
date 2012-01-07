@@ -4,7 +4,7 @@ Redmine::Plugin.register :redmine_importer do
   name 'Issue Importer'
   author 'Martin Liu / Leo Hourvitz'
   description 'Issue import plugin for Redmine.'
-  version '0.9'
+  version '1.0'
 
   project_module :importer do
     permission :import, :importer => :index
