@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+one:
+  id: 1
+  csv_data: 
+  user: 
+  created: 2010-10-09 20:40:03
+two:
+  id: 2
+  csv_data: 
+  user: 
+  created: 2010-10-09 20:40:03
